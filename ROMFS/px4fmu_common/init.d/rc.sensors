@@ -231,3 +231,19 @@ then
 	# start last (wait for possible icm20948 passthrough mode)
 	ak09916 -X -q start
 fi
+
+#Solano additions
+if param compare -s SENS_EN_SOL 1
+then
+	solano start -X -a 0x7A
+	# probe for number of solano probes
+	if param compare -s SENS_SOL_N 2
+	then
+		solano start -X -a 0x7B
+	fi
+	if param compare -s SENS_SOL_N 3
+	then
+		solano start -X -a 0x7B
+		solano start -X -a 0x7C
+	fi
+fi

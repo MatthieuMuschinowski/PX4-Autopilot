@@ -94,6 +94,7 @@ set(msg_files
 	FigureEightStatus.msg
 	FailsafeFlags.msg
 	FailureDetectorStatus.msg
+	FiveHolesProbe.msg
 	FlightPhaseEstimation.msg
 	FollowTarget.msg
 	FollowTargetEstimator.msg
@@ -204,6 +205,7 @@ set(msg_files
 	SensorsStatusImu.msg
 	SensorUwb.msg
 	SensorAirflow.msg
+	Solano.msg
 	SystemPower.msg
 	TakeoffStatus.msg
 	TaskStackInfo.msg
@@ -252,6 +254,7 @@ set(msg_files
 	VtolVehicleStatus.msg
 	WheelEncoders.msg
 	Wind.msg
+	WindMeasure.msg
 	YawEstimatorStatus.msg
 )
 list(SORT msg_files)

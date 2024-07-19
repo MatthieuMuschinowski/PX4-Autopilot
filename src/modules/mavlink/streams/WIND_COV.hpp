@@ -35,7 +35,8 @@
 #define WIND_COV_HPP
 
 #include <uORB/topics/vehicle_local_position.h>
-#include <uORB/topics/wind.h>
+#include <uORB/topics/wind_measure.h>
+#include <uORB/topics/solano.h>
 
 class MavlinkStreamWindCov : public MavlinkStream
 {
@@ -56,35 +57,81 @@ public:
 private:
 	explicit MavlinkStreamWindCov(Mavlink *mavlink) : MavlinkStream(mavlink) {}
 
-	uORB::Subscription _wind_sub{ORB_ID(wind)};
+	uORB::SubscriptionMultiArray<solano_s,3> _solano_subs{ORB_ID::solano};			/**< Solano probes subscriptions */
+
+	uORB::Subscription _wind_sub{ORB_ID(wind_measure)};
 	uORB::Subscription _local_pos_sub{ORB_ID(vehicle_local_position)};
 
 	bool send() override
 	{
-		wind_s wind;
+		wind_measure_s wind;
+		mavlink_wind_cov_t msg{};
+
+		for (auto &solano_sub : _solano_subs) {
+
+			solano_s solano;
+
+			solano_sub.copy(&solano);
+
+			msg.time_usec = solano.timestamp;
+
+			if(solano.id == 1) {
+				msg.wind_x = solano.windspeed_f;
+				msg.wind_y = solano.angle_ew_f;
+				msg.wind_z = solano.angle_ns_f;
+
+				if(fabsf(solano.windspeed) <= 0.01f){
+					msg.horiz_accuracy = -1.0f;
+				}
+				else{
+					msg.horiz_accuracy = 1.0f;
+				}
+			}
+			else if(solano.id == 2){
+				msg.wind_alt = solano.windspeed_f;
+				msg.var_horiz = solano.angle_ew_f;
+				msg.var_vert = solano.angle_ns_f;
+
+				if(fabsf(solano.windspeed) <= 0.01f){
+					msg.vert_accuracy = -1.0f;
+				}
+				else{
+					msg.vert_accuracy = 1.0f;
+				}
+			}
+
+		}
 
 		if (_wind_sub.update(&wind)) {
-			mavlink_wind_cov_t msg{};
 
-			msg.time_usec = wind.timestamp;
+			if(wind.multiprobe){
+				mavlink_msg_wind_cov_send_struct(_mavlink->get_channel(), &msg);
+				return true;
+			}
+			else{
 
-			msg.wind_x = wind.windspeed_north;
-			msg.wind_y = wind.windspeed_east;
-			msg.wind_z = 0.0f;
+				msg.time_usec = wind.timestamp;
 
-			msg.var_horiz = wind.variance_north + wind.variance_east;
-			msg.var_vert = 0.0f;
+				msg.wind_x = wind.windspeed_north_f;
+				msg.wind_y = wind.windspeed_east_f;
+				msg.wind_z = wind.windspeed_down_f;
 
-			vehicle_local_position_s lpos{};
-			_local_pos_sub.copy(&lpos);
-			msg.wind_alt = (lpos.z_valid && lpos.z_global) ? (-lpos.z + lpos.ref_alt) : (float)NAN;
+				msg.var_horiz =  wind.variance_east;
+				msg.var_vert = wind.variance_north;
 
-			msg.horiz_accuracy = 0.0f;
-			msg.vert_accuracy = 0.0f;
+				vehicle_local_position_s lpos{};
+				_local_pos_sub.copy(&lpos);
+				msg.wind_alt = (lpos.z_valid && lpos.z_global) ? (-lpos.z + lpos.ref_alt) : (float)NAN;
 
-			mavlink_msg_wind_cov_send_struct(_mavlink->get_channel(), &msg);
+				msg.horiz_accuracy = wind.horiz_accuracy;
+				msg.vert_accuracy = wind.vert_accuracy;
 
-			return true;
+				mavlink_msg_wind_cov_send_struct(_mavlink->get_channel(), &msg);
+
+				return true;
+
+			}
+
 		}
 
 		return false;

@@ -36,3 +36,9 @@ mc_pos_control start
 # Start Multicopter Land Detector.
 #
 land_detector start multicopter
+
+# Solano additions
+if param compare -s SENS_EN_SOL 1
+then
+	five_holes_probe start
+fi
