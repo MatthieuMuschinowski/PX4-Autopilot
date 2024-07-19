@@ -1,0 +1,12 @@
+menuconfig MODULES_FIVE_HOLES_PROBE
+	bool "five_holes_probe"
+	default n
+	---help---
+		Enable support for five_holes_probe
+
+menuconfig USER_FIVE_HOLES_PROBE
+	bool "five_holes_probe running as userspace module"
+	default y
+	depends on BOARD_PROTECTED && MODULES_FIVE_HOLES_PROBE
+	---help---
+		Put five_holes_probe in userspace memory

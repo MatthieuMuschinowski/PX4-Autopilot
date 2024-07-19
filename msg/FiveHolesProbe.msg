@@ -1,0 +1,17 @@
+uint64 timestamp			# time since system start (microseconds)
+
+float32 differential_pressure_center_raw
+float32 differential_pressure_yaw_raw
+float32 differential_pressure_pitch_raw
+float32 differential_pressure_center_filtered
+float32 differential_pressure_yaw_filtered
+float32 differential_pressure_pitch_filtered
+
+float32 airspeed_raw
+float32 airspeed_filtered
+
+float32 air_yaw_raw
+float32 air_yaw_filtered
+
+float32 air_pitch_raw
+float32 air_pitch_filtered
